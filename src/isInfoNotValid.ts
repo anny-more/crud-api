@@ -1,19 +1,17 @@
 export const isInfoNotvalid = (
   username: string,
-  age: string,
-  hobbies: string
+  age: number,
+  hobbies: string[]
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      const userAge = Number(age);
-      const userHobbies = hobbies.split(', ') || [];
-      if (username.length < 1 && username.trim()) {
+      if (!age) {
         reject('401');
       }
-      if (userAge < 1) {
+      if (age < 1) {
         reject('401');
       }
-      resolve({username, age: userAge, hobbies: userHobbies});
+      resolve({username, age: age, hobbies});
     } catch {
       reject('401');
     }

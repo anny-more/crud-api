@@ -9,7 +9,7 @@ class Users {
     this.users = [];
   }
   getAll = async () => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       resolve(this.users);
     });
   };
