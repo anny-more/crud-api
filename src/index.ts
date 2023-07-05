@@ -9,21 +9,74 @@ const PORT = process.env.PORT;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/api/users', (req, res) => {
-  const json = Users.getAll();
+const ErrorHandler = (code: unknown) => {
+  const messageTemp = {
+    '400': 'response is invalid',
+    '404': "user  doesn't exist",
+  };
+  if (code === '400' || code === '404') {
+    const message: string = messageTemp[code];
+    return {status: Number(code), message};
+  } else {
+    return {status: 500, message: 'Smth wrong'};
+  }
+};
+
+app.get('/api/users', async (req, res) => {
+  const json = await Users.getAll();
   console.log('this', json);
   res.json(json);
 });
-app.post('/api/users', (req, res) => {
+
+app.get('/api/users/:id', async (req, res) => {
   try {
-    Users.postUser({
+    const user = await Users.getOne(req.params.id);
+    console.log(user);
+    res.json(user);
+  } catch (e) {
+    const err = ErrorHandler(e);
+    res.status(err.status).send(err.message);
+  }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    await Users.postUser({
       ...req.body,
       age: Number(req.body.age),
-      hobbies: JSON.parse(req.body.hobbies),
+      hobbies: req.body.hobbies.split(', ') || [],
     });
     res.json({message: `user ${req.body.username} added`});
   } catch (e) {
-    res.status(401).send(e);
+    console.error(e);
+    const err = ErrorHandler(e);
+    res.status(err.status).send(err.message);
+  }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const response = await Users.updateUser(req.params.id, {
+      ...req.body,
+      age: Number(req.body.age),
+      hobbies: req.body.hobbies.split(', ') || [],
+    });
+    res.json(response);
+  } catch (e) {
+    console.error(e);
+    const err = ErrorHandler(e);
+    res.status(err.status).send(err.message);
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    await Users.deleteUser(req.params.id);
+    res.json('user deleted');
+  } catch (e) {
+    console.error(e);
+    const err = ErrorHandler(e);
+    res.status(err.status).send(err.message);
   }
 });
 
