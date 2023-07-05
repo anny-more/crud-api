@@ -1,17 +1,5 @@
-import {z} from 'zod';
-import {v4 as uuidv4} from 'uuid';
-
-interface UserInfo {
-  id: string;
-  username: string;
-  age: number;
-  hobbies: String[];
-}
-const UserSchema = z.object({
-  username: z.string().nonempty(),
-  age: z.number().min(1),
-  hobbies: z.array(z.string()),
-});
+import {v4 as uuidv4, validate} from 'uuid';
+import {UserInfo} from './UserInfo';
 
 interface Users {
   users: UserInfo[];
@@ -27,7 +15,7 @@ class Users {
   };
   getOne = async (id: string) => {
     return new Promise((resolve, reject) => {
-      if (id.length < 36) {
+      if (!validate(id)) {
         reject('400');
       }
       const user = this.users.find(user => user.id === id);
@@ -41,7 +29,6 @@ class Users {
   postUser = async (object: Object) => {
     return new Promise((resolve, reject) => {
       try {
-        UserSchema.parse(object);
         const id = uuidv4();
         const user = {id, ...object} as UserInfo;
         this.users.push(user);
@@ -54,8 +41,9 @@ class Users {
   updateUser = async (id: string, object: Object) => {
     return new Promise((resolve, reject) => {
       try {
-        if (id.length < 36) reject('404');
-        UserSchema.parse(object);
+        if (!validate(id)) {
+          reject('400');
+        }
         const item = this.users.findIndex(user => user.id === id);
         if (item === -1) reject('404');
         this.users[item] = {...this.users[item], ...object} as UserInfo;
@@ -67,6 +55,9 @@ class Users {
   };
   deleteUser = (id: string) => {
     return new Promise((resolve, reject) => {
+      if (!validate(id)) {
+        reject('400');
+      }
       const user = this.users.find(user => user.id === id);
       if (user) {
         this.users = this.users.filter(user => user.id !== id);

@@ -1,6 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import bodyParser from 'body-parser';
+import {isInfoNotvalid} from './isInfoNotValid';
 
 import Users from './Users';
 
@@ -41,11 +42,9 @@ app.get('/api/users/:id', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    await Users.postUser({
-      ...req.body,
-      age: Number(req.body.age),
-      hobbies: req.body.hobbies.split(', ') || [],
-    });
+    const {username, age, hobbies} = req.body;
+    const validData = await isInfoNotvalid(username, age, hobbies);
+    await Users.postUser(validData as Object);
     res.json({message: `user ${req.body.username} added`});
   } catch (e) {
     console.error(e);
@@ -56,11 +55,10 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
   try {
-    const response = await Users.updateUser(req.params.id, {
-      ...req.body,
-      age: Number(req.body.age),
-      hobbies: req.body.hobbies.split(', ') || [],
-    });
+    const id = req.params.id;
+    const {username, age, hobbies} = req.body;
+    const validData = await isInfoNotvalid(username, age, hobbies);
+    const response = await Users.updateUser(id, validData as Object);
     res.json(response);
   } catch (e) {
     console.error(e);
